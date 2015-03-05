@@ -21,9 +21,10 @@ class TabulaRecta:
     """
 
     def __init__(self):
-        self._size = 26
-        self._first_last_char = (chr(65), chr(90))
+        self._first_last_char = (chr(32), chr(126))
+        #self._first_last_char = (chr(65), chr(90))
         #self._first_last_char = (chr(97), chr(122))
+        self._size = ord(self._first_last_char[1]) - ord(self._first_last_char[0]) + 1
         self._init_row = [chr(c) for c in range(ord(self._first_last_char[0]), ord(self._first_last_char[1]) + 1)]
         self._tabula_recta = self._build_tabula_recta()
 
