@@ -4,7 +4,7 @@ import argparse
 import itertools
 
 ################################################################################
-# Vigenere cipher encoder/decoder
+# Vigenere cipher encryptr/decryptr
 ################################################################################
 
 
@@ -21,9 +21,9 @@ class TabulaRecta:
     """
 
     def __init__(self):
-        self._first_last_char = (chr(32), chr(126))
+        #self._first_last_char = (chr(32), chr(126))
         #self._first_last_char = (chr(65), chr(90))
-        #self._first_last_char = (chr(97), chr(122))
+        self._first_last_char = (chr(97), chr(122))
         self._size = ord(self._first_last_char[1]) - ord(self._first_last_char[0]) + 1
         self._init_row = [chr(c) for c in range(ord(self._first_last_char[0]), ord(self._first_last_char[1]) + 1)]
         self._tabula_recta = self._build_tabula_recta()
@@ -43,10 +43,10 @@ class TabulaRecta:
                 else chr((ord(c) + k) % (ord_last_char + 1) + ord_first_char)
                 for c in row]
 
-    def map_char(self, char, key_char):
+    def map_char(self, char, key_char, encrypt=True):
         row_index = ord(char) - ord(self._first_last_char[0])
         col_index = ord(key_char) - ord(self._first_last_char[0])
-        ch = self._tabula_recta[row_index][col_index]
+        ch = self._tabula_recta[row_index][col_index] if encrypt else chr(self._tabula_recta[row_index].index(key_char) + ord(self._first_last_char[0]))
         #print('Mapping {0} -> {1} (row={2}; col={3})'.format(char, ord(ch), row_index, col_index))
         return ch
 
@@ -57,11 +57,13 @@ class TabulaRecta:
         return s
 
 
-def encode(message, key):
+def crypt(message, key, encrypt=True):
+    """Either encrypt or decript the message"""
+
     def extend_key(message, key):
         """
         Extend the key.
-        If we want to encode 'message' with the key 'key',
+        If we want to encrypt 'message' with the key 'key',
         we need to extend the key to match the message:
         message:    'message'
         ext key:    'keykeyk'
@@ -74,22 +76,20 @@ def encode(message, key):
 
     tr = TabulaRecta()
     ext_key = extend_key(message, key)
-    #print('Message: {0}\nExt key: {1}'.format(message, ext_key))
-    #print(tr)
-    encoded_message = ''
+    msg = ''
     for pair in zip(message, ext_key):
-        encoded_message += tr.map_char(pair[0], pair[1])
-    return encoded_message
+        msg += tr.map_char(pair[0], pair[1], encrypt) if encrypt else tr.map_char(pair[1], pair[0], encrypt)
+    return msg
 
 
-def encode_wrapper(args):
-    print('Encoding message [{0}] with key [{1}]'.format(args.message, args.key))
-    print(encode(args.message, args.key))
+def encrypt_wrapper(args):
+    print('Encrypting message [{0}] with key [{1}]'.format(args.message, args.key))
+    print(crypt(args.message, args.key))
 
 
-def decode_wrapper(args):
-    # TODO: Implement decoding!
-    print('Decoding message [{0}] with key [{1}]'.format(args.message, args.key))
+def decrypt_wrapper(args):
+    print('Decrypting message [{0}] with key [{1}]'.format(args.message, args.key))
+    print(crypt(args.message, args.key, encrypt=False))
 
 
 def main():
@@ -99,18 +99,20 @@ def main():
     subparsers.dest = 'command'
 
     ############################################################################
-    # Parser for "encode" command
+    # Parser for "encrypt" command
     ############################################################################
-    encode_parser = subparsers.add_parser('encode', help='Encode message using Vigenere cipher')
-    encode_parser.add_argument('-m', '--message', type=str, required=True, help='Message to encode')
-    encode_parser.add_argument('-k', '--key', type=str, required=True, help='Key to encode the message with')
-    encode_parser.set_defaults(func=encode_wrapper)
+    encrypt_parser = subparsers.add_parser('encrypt', help='Encrypt message using Vigenere cipher')
+    encrypt_parser.add_argument('-m', '--message', type=str, required=True, help='Message to encrypt')
+    encrypt_parser.add_argument('-k', '--key', type=str, required=True, help='Key to encrypt the message with')
+    encrypt_parser.set_defaults(func=encrypt_wrapper)
 
     ############################################################################
-    # Parser for "decode" command
+    # Parser for "decrypt" command
     ############################################################################
-    decode_parser = subparsers.add_parser('decode', help='Decode message encoded with Vigenere cipher')
-    decode_parser.set_defaults(func=decode_wrapper)
+    decrypt_parser = subparsers.add_parser('decrypt', help='Decrypt message encrypted with Vigenere cipher')
+    decrypt_parser.add_argument('-m', '--message', type=str, required=True, help='Message to encrypt')
+    decrypt_parser.add_argument('-k', '--key', type=str, required=True, help='Key to encrypt the message with')
+    decrypt_parser.set_defaults(func=decrypt_wrapper)
 
     args = parser.parse_args()
     args.func(args)
