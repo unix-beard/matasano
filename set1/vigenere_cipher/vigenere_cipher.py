@@ -58,7 +58,7 @@ class TabulaRecta:
 
 
 def crypt(message, key, encrypt=True):
-    """Either encrypt or decript the message"""
+    """Either encrypt or decrypt the message"""
 
     def extend_key(message, key):
         """
